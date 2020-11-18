@@ -26,7 +26,7 @@ namespace CATIAPlaneFacesArea
                 Console.ReadKey();
                 return;
             }
-            else if (! (activeDocument is ProductDocument))
+            else if (!(activeDocument is ProductDocument))
             {
                 Console.WriteLine("Veuillez ouvrir un assemblage.");
                 Console.ReadKey();
@@ -40,6 +40,8 @@ namespace CATIAPlaneFacesArea
             var products = rootProduct.Products;
             var workbenchId = catiaInstane.GetWorkbenchId();
             var areas = 0.0;
+            double PlanarFacesAreaForPart = 0.0;
+            double totalAreaPlanarFaces = 0.0;
             for (int i = 1; i <= products.Count; i++)
             {
 
@@ -80,7 +82,7 @@ namespace CATIAPlaneFacesArea
                 part.Update();
                 catiaInstane.StartWorkbench("Inertia");
                 var spaWb = (SPAWorkbench)partDocumentOf.GetWorkbench("SPAWorkbench");
-               
+
                 foreach (var extract in extracts)
                 {
                     try
@@ -89,32 +91,36 @@ namespace CATIAPlaneFacesArea
                         var measurableOnExtract = spaWb.GetMeasurable(part.CreateReferenceFromObject(extract));
                         Console.WriteLine(measurableOnExtract.GeometryName);
                         var planecomponents = new object[9]; //new object[9];//Enumerable.Range(0,9).Select(x=> 0.0).ToArray();
+                        areas += measurableOnExtract.Area;
+                        Console.WriteLine("Aire de la face = {0}", measurableOnExtract.Area);
                         if (measurableOnExtract.GeometryName == CatMeasurableName.CatMeasurablePlane)
                         {
-                            areas += measurableOnExtract.Area;
-
-                            measurableOnExtract.GetPlane(planecomponents);
+                            //measurableOnExtract.GetPlane(planecomponents);
                         }
                     }
                     catch (Exception e)
                     {
                     }
                 }
-
+                //Console.WriteLine($"The computed area is {areas}");
                 selection.Clear();
                 selection.Add(rootProduct);
 
                 catiaInstane.StartWorkbench("Assembly");
 
                 workbenchId = catiaInstane.GetWorkbenchId();
+                PlanarFacesAreaForPart = areas;
+                totalAreaPlanarFaces += PlanarFacesAreaForPart;
+
+                selection.Clear();
+                selection.Add(hybridBody);
+                selection.Delete();
+                Console.WriteLine("Aire totale temporaire = {0}", totalAreaPlanarFaces);
             }
 
 
-
-
-
-
-
+            Console.WriteLine("L'aire de toutes les faces planes vaut: {0}", areas);
+            Console.ReadKey();
         }
     }
 }
